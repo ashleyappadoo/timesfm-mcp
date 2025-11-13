@@ -33,12 +33,13 @@ class TimesFMServer:
                     horizon_len=128,
                     input_patch_len=32,
                     output_patch_len=128,
-                    num_layers=50,  # 50 for 2.0 version (vs 20 for 1.0)
+                    #num_layers=50,  # 50 for 2.0 version (vs 20 for 1.0)
+                    num_layers=20,  # 20 pour 1.0 (au lieu de 50)
                     model_dims=1280,
                     use_positional_embedding=False,
                 ),
                 checkpoint=timesfm.TimesFmCheckpoint(
-                    huggingface_repo_id="google/timesfm-2.0-500m-pytorch"  # PYTORCH version!
+                    huggingface_repo_id="google/timesfm-1.0-200m-pytorch"  # PYTORCH version!
                 )
             )
             
