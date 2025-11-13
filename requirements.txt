@@ -1,5 +1,5 @@
-# TimesFM 2.0 PyTorch (stable)
-timesfm>=1.3.0
+# TimesFM 1.0 PyTorch (plus léger pour Render Free)
+timesfm==1.3.0
 torch>=2.0.0
 numpy>=1.21.0
 pandas>=1.3.0
