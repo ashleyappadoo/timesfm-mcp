@@ -1,0 +1,11 @@
+# TimesFM 2.0 PyTorch (stable)
+timesfm>=1.3.0
+torch>=2.0.0
+numpy>=1.21.0
+pandas>=1.3.0
+huggingface-hub>=0.16.0
+
+# Core dependencies
+scikit-learn>=1.3.0
+scipy>=1.11.0
+requests>=2.31.0

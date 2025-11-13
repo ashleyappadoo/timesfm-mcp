@@ -1,0 +1,13 @@
+# Arrêter et reconstruire
+docker-compose down
+docker-compose build --no-cache
+docker-compose up -d
+
+# Attendre que le modèle se charge (quelques secondes car il est déjà en cache)
+docker-compose logs -f timesfm-mcp
+
+# Une fois que vous voyez "server starting on port 8080", testez :
+curl http://localhost:8080/health
+
+# Puis testez la prédiction
+curl -X POST http://localhost:8080/forecast -H "Content-Type: application/json" -d "{\"data\": [100, 110, 105, 120, 115, 130, 125, 140, 135, 150], \"horizon\": 10}"
