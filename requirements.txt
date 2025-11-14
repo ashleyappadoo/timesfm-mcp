@@ -1,11 +1,10 @@
-# TimesFM 1.0 PyTorch (plus léger pour Render Free)
-timesfm==1.3.0
+# TimesFM 1.0 - Memory Optimized for Render (512MB)
+timesfm>=1.0.0
 torch>=2.0.0
 numpy>=1.21.0
-pandas>=1.3.0
-huggingface-hub>=0.16.0
+psutil>=5.8.0
 
-# Core dependencies
-scikit-learn>=1.3.0
-scipy>=1.11.0
-requests>=2.31.0
+# Minimal dependencies only - removed heavy packages
+# pandas removed (not essential for basic forecasting)
+# scipy removed (timesfm handles math)
+# matplotlib removed (no visualization in server)
