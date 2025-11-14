@@ -13,11 +13,13 @@ WORKDIR /app
 # Copy requirements first for better caching
 COPY requirements.txt .
 
-# Install CPU-only packages in builder stage
+# CORRECTION: Installer PyTorch CPU séparément, puis les autres packages
 RUN pip install --no-cache-dir \
     --index-url https://download.pytorch.org/whl/cpu \
-    torch && \
-    pip install --no-cache-dir -r requirements.txt
+    torch
+
+# Ensuite installer les autres packages depuis PyPI standard
+RUN pip install --no-cache-dir -r requirements.txt
 
 # =======================
 # STAGE 2: Runtime (finale)
