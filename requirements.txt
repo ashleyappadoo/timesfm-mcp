@@ -1,10 +1,21 @@
-# TimesFM 1.0 - Memory Optimized for Render (512MB)
+# TimesFM Ultra-Lightweight pour Railway/Render
+# Force CPU-only PyTorch (plus léger)
+--index-url https://download.pytorch.org/whl/cpu
+torch>=2.0.0,<3.0.0
+
+# TimesFM avec dépendances minimales
 timesfm>=1.0.0
-torch>=2.0.0
-numpy>=1.21.0
+
+# Dependencies essentielles uniquement
+numpy>=1.21.0,<2.0.0
 psutil>=5.8.0
 
-# Minimal dependencies only - removed heavy packages
-# pandas removed (not essential for basic forecasting)
-# scipy removed (timesfm handles math)
-# matplotlib removed (no visualization in server)
+# Minimal HTTP/JSON handling
+# (requests/httpx sont inclus avec timesfm)
+
+# SUPPRIMÉ pour économiser l'espace :
+# - pandas (lourd, optionnel pour le serveur)
+# - scipy (inclus avec timesfm)
+# - scikit-learn (inclus avec timesfm) 
+# - matplotlib (pas nécessaire pour serveur)
+# - jupyter, notebook, etc.
