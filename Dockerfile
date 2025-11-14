@@ -1,39 +1,59 @@
-FROM python:3.10-slim
+# Multi-stage build pour réduire la taille finale
+FROM python:3.10-slim AS builder
 
-# Install system dependencies
+# Installer seulement les outils de build nécessaires
 RUN apt-get update && apt-get install -y \
     git \
     curl \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
+    --no-install-recommends && \
+    rm -rf /var/lib/apt/lists/*
 
-# Set working directory
 WORKDIR /app
 
-# Copy requirements and install Python dependencies
+# Copy requirements first for better caching
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+
+# Install CPU-only packages in builder stage
+RUN pip install --no-cache-dir \
+    --index-url https://download.pytorch.org/whl/cpu \
+    torch && \
+    pip install --no-cache-dir -r requirements.txt
+
+# =======================
+# STAGE 2: Runtime (finale)
+# =======================
+FROM python:3.10-slim
+
+# Install only runtime dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    --no-install-recommends && \
+    rm -rf /var/lib/apt/lists/* && \
+    apt-get clean
+
+WORKDIR /app
+
+# Copy installed packages from builder
+COPY --from=builder /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy application code
-COPY . .
+COPY timesfm_server.py .
 
-# Create directories for models and logs
+# Create directories
 RUN mkdir -p /app/models /app/logs
 
-# Expose port
-EXPOSE 8080
-
 # Set environment variables
+ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
-ENV TIMESFM_MODEL_PATH=/app/models
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s \
-    CMD curl -f http://localhost:8080/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD curl -f http://localhost:${PORT:-8080}/health || exit 1
 
-# Render compatibility
+# Use Railway's dynamic port
 ENV PORT=8080
 EXPOSE $PORT
 
-# Run the server
+# Run the application
 CMD ["python", "timesfm_server.py"]
