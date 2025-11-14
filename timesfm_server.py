@@ -7,6 +7,7 @@ Ultra-lightweight forecasting server
 import json
 import logging
 import os
+import urllib.parse
 from datetime import datetime
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from typing import Dict, Any, List
@@ -124,11 +125,70 @@ class TimesFMHTTPHandler(BaseHTTPRequestHandler):
             self._send_json_response(200, {
                 "service": "TimesFM Forecasting Server",
                 "version": "Railway Pure Python",
-                "endpoints": ["/health", "/forecast", "/status"],
+                "endpoints": ["/health", "/forecast (GET/POST)", "/status"],
                 "dependencies": "Zero external dependencies",
                 "algorithm": "Pure Python trend forecasting",
                 "status": "ready"
             })
+            
+        elif self.path.startswith('/forecast'):
+            # NEW: GET support for forecast
+            try:
+                # Parse URL parameters
+                from urllib.parse import urlparse, parse_qs
+                parsed_url = urlparse(self.path)
+                params = parse_qs(parsed_url.query)
+                
+                # Extract parameters
+                if 'ts' not in params:
+                    self._send_json_response(400, {
+                        "error": "Missing 'ts' parameter",
+                        "usage": "/forecast?ts=[timeseries_json]&h=6&f=monthly"
+                    })
+                    return
+                
+                # Decode timeseries data
+                timeseries_json = params['ts'][0]
+                timeseries_data = json.loads(timeseries_json)
+                
+                # Extract other parameters with defaults
+                horizon = int(params.get('h', ['6'])[0])
+                frequency = params.get('f', ['monthly'])[0]
+                
+                logger.info(f"📊 GET Forecast: {len(timeseries_data)} points → {horizon} steps ({frequency})")
+                
+                # Process timeseries data - extract values only
+                if isinstance(timeseries_data[0], list):
+                    # Format: [[timestamp, value], [timestamp, value], ...]
+                    data_values = [point[1] for point in timeseries_data]
+                else:
+                    # Format: [value1, value2, value3, ...]
+                    data_values = timeseries_data
+                
+                # Validate
+                if len(data_values) < 3:
+                    self._send_json_response(400, {"error": "Need at least 3 data points"})
+                    return
+                
+                # Generate forecast using existing logic
+                result = self.server_instance.forecast(data_values, horizon)
+                
+                # Add metadata about the request
+                result.update({
+                    "request_method": "GET",
+                    "frequency": frequency,
+                    "timeseries_length": len(timeseries_data)
+                })
+                
+                self._send_json_response(200, result)
+                
+            except json.JSONDecodeError:
+                self._send_json_response(400, {"error": "Invalid JSON in 'ts' parameter"})
+            except ValueError as e:
+                self._send_json_response(400, {"error": str(e)})
+            except Exception as e:
+                logger.error(f"❌ GET forecast error: {e}")
+                self._send_json_response(500, {"error": "Internal server error"})
             
         else:
             self._send_json_response(404, {"error": "Endpoint not found"})
